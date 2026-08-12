@@ -18,7 +18,7 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "test:coverage": "pnpm --filter @agentengram/engine test:coverage && pnpm --filter @agentengram/adapter-pi test:coverage && pnpm --filter @agentengram/adapter-codex test:coverage && pnpm --filter @agentengram/mcp test:coverage",
+    "test:coverage": "pnpm build && pnpm --filter @agentengram/engine test:coverage && pnpm --filter @agentengram/adapter-pi test:coverage && pnpm --filter @agentengram/adapter-codex test:coverage && pnpm --filter @agentengram/mcp test:coverage",
     "test:package": "node scripts/package-smoke.mjs",
     "test:install": "node scripts/clean-install-smoke.mjs",
     "check": "pnpm build && pnpm typecheck && pnpm test && pnpm test:package",
