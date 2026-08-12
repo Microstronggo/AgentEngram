@@ -55,7 +55,7 @@ export async function acquireFileLock(path: string, options: FileLockOptions = {
         },
       };
     } catch (error) {
-      if (!isAlreadyExists(error)) throw error;
+      if (!isLockContentionError(error)) throw error;
       if (await isRecoverableLock(path, malformedStaleAfterMs)) {
         await rm(path, { force: true });
         continue;
@@ -94,8 +94,18 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
-function isAlreadyExists(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "EEXIST";
+/**
+ * Identifies exclusive-create failures that mean another local owner currently
+ * holds the lock. Windows may report EPERM or EBUSY instead of EEXIST while a
+ * lock file is being created, written, scanned, or removed.
+ *
+ * The platform argument makes the OS-specific classification deterministic in
+ * unit tests without changing the process-wide platform value.
+ */
+export function isLockContentionError(error: unknown, platform = process.platform): boolean {
+  if (!(error instanceof Error && "code" in error)) return false;
+  if (error.code === "EEXIST") return true;
+  return platform === "win32" && (error.code === "EPERM" || error.code === "EBUSY");
 }
 
 function delay(ms: number): Promise<void> {

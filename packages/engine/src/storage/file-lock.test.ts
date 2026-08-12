@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { acquireFileLock } from "./file-lock.js";
+import { acquireFileLock, isLockContentionError } from "./file-lock.js";
 
 describe("acquireFileLock", () => {
   it("waits for a live owner and proceeds after token-aware release", async () => {
@@ -23,5 +23,12 @@ describe("acquireFileLock", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
     const lease = await acquireFileLock(path, { malformedStaleAfterMs: 1, timeoutMs: 100 });
     await lease.release();
+  });
+
+  it("classifies Windows exclusive-create errors as retryable contention", () => {
+    expect(isLockContentionError(Object.assign(new Error("exists"), { code: "EEXIST" }), "linux")).toBe(true);
+    expect(isLockContentionError(Object.assign(new Error("busy"), { code: "EBUSY" }), "win32")).toBe(true);
+    expect(isLockContentionError(Object.assign(new Error("denied"), { code: "EPERM" }), "win32")).toBe(true);
+    expect(isLockContentionError(Object.assign(new Error("denied"), { code: "EPERM" }), "linux")).toBe(false);
   });
 });
