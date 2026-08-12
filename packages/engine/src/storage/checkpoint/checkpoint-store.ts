@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname } from "node:path";
+import { syncDirectory } from "../durability.js";
 import { sha256, stableStringify, type JsonValue } from "../serialization.js";
 import type { ProjectionLogRecord } from "../projection-log/projection-log.js";
 
@@ -210,15 +211,6 @@ export function validateCheckpointProjectionHead(
 
 function checkpointHash(checkpoint: ProjectionCheckpoint): string {
   return sha256(checkpoint as unknown as JsonValue);
-}
-
-async function syncDirectory(path: string): Promise<void> {
-  const directory = await open(path, "r");
-  try {
-    await directory.sync();
-  } finally {
-    await directory.close();
-  }
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { syncDirectory } from "../../../storage/durability.js";
 import { emptyCellFormationState, type CellFormationState } from "./cell-formation-state.js";
 
 /** Composite key that isolates durable Cell state per host session and thread. */
@@ -48,8 +49,7 @@ export class FileCellFormationStateRepository implements CellFormationStateRepos
       await file.sync();
       await file.close();
       await rename(temporary, path);
-      const directory = await open(dirname(path), "r");
-      try { await directory.sync(); } finally { await directory.close(); }
+      await syncDirectory(dirname(path));
     } catch (error) {
       await file.close().catch(() => undefined);
       await rm(temporary, { force: true });

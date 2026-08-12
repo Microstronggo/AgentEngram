@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { syncDirectory } from "../storage/durability.js";
 import {
   MemoryContextProjector,
   validateProjectedMessages,
@@ -183,8 +184,7 @@ export class FileSessionMemoryRepository implements SessionMemoryRepository {
       await file.sync();
       await file.close();
       await rename(temporary, target);
-      const directory = await open(dirname(target), "r");
-      try { await directory.sync(); } finally { await directory.close(); }
+      await syncDirectory(dirname(target));
     } catch (error) {
       await file.close().catch(() => undefined);
       await rm(temporary, { force: true });

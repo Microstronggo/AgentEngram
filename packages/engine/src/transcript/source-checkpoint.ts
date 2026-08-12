@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, rename, rm, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import { syncDirectory } from "../storage/durability.js";
 import type { JsonValue } from "../storage/serialization.js";
 
 /** Cursor representation understood by one adapter-owned transcript source. */
@@ -85,8 +86,7 @@ export class FileSourceCheckpointRepository implements SourceCheckpointRepositor
       await handle.close();
       handle = undefined;
       await rename(temporary, target);
-      const directory = await open(this.rootDir, "r");
-      try { await directory.sync(); } finally { await directory.close(); }
+      await syncDirectory(this.rootDir);
     } finally {
       await handle?.close().catch(() => undefined);
       await rm(temporary, { force: true }).catch(() => undefined);

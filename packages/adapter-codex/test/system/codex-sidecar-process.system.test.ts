@@ -9,7 +9,7 @@ import { createCodexHookHandler } from "../../src/hook-runtime.js";
 const directories: string[] = [];
 
 afterEach(async () => {
-  await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
+  await Promise.all(directories.splice(0).map(removeDirectoryEventually));
 });
 
 describe("Codex detached worker process", () => {
@@ -88,7 +88,7 @@ describe("Codex detached worker process", () => {
       permission_mode: "default",
       prompt: "What should happen before committing code?",
     });
-    expect(recalled?.hookSpecificOutput?.additionalContext).toContain("Ask for confirmation before committing code");
+    expect(recalled?.hookSpecificOutput?.additionalContext).toMatch(/required confirmation before committing code/i);
   }, 15_000);
 });
 
@@ -96,6 +96,22 @@ class RejectingLLMClient implements LLMChatClient {
   async chat(): Promise<never> {
     throw new Error("producer Hook must not invoke its injected LLM client");
   }
+}
+
+/** Allows the detached worker a brief window to release files after its durable write. */
+async function removeDirectoryEventually(directory: string): Promise<void> {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      await rm(directory, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && ["EBUSY", "ENOTEMPTY", "EPERM"].includes(String(error.code)))) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25 * (attempt + 1)));
+    }
+  }
+  await rm(directory, { recursive: true, force: true });
 }
 
 async function startFakeProvider(): Promise<{
