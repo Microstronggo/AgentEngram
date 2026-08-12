@@ -1,0 +1,65 @@
+# Dependencies and package-manager state
+node_modules/
+.pnpm-store/
+
+# Build, test, and tool caches
+dist/
+coverage/
+.nyc_output/
+.cache/
+.turbo/
+*.tsbuildinfo
+
+# Local runtime data and generated evaluation artifacts
+.agentengram/
+packages/evaluation/.agentengram-eval/
+packages/evaluation/datasets/
+packages/evaluation/reports/
+
+# Environment files and local registry credentials
+.env
+.env.*
+!.env.example
+.envrc
+.direnv/
+.npmrc
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.swp
+*~
+
+# Local databases and their journal files
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Locally produced package and portable-bundle archives
+*.tgz
+*.zip
+*.tar.gz
+
+# Private keys and signing material
+*.key
+*.pem
+*.p12
+*.pfx
+*.mobileprovision
+
+# Editor, operating-system, and local agent state
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.fleet/
+.history/
+.codex/
+.claude/
+.cursor/

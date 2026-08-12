@@ -1,0 +1,32 @@
+{
+  "name": "@agentengram/mcp",
+  "version": "0.1.0",
+  "description": "MCP stdio server for explicit AgentEngram operations",
+  "keywords": ["agent", "memory", "mcp", "context"],
+  "license": "Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/Microstronggo/AgentEngram.git", "directory": "packages/mcp" },
+  "homepage": "https://github.com/Microstronggo/AgentEngram/tree/main/packages/mcp#readme",
+  "bugs": { "url": "https://github.com/Microstronggo/AgentEngram/issues" },
+  "private": false,
+  "publishConfig": { "access": "public" },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "bin": { "agentengram-mcp": "./dist/cli.js" },
+  "files": ["dist", "README.md", "LICENSE"],
+  "engines": { "node": ">=22.5.0" },
+  "dependencies": {
+    "@agentengram/engine": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "^4.0.0"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "prepack": "pnpm run build",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run src test",
+    "test:coverage": "vitest run src test --coverage.enabled --coverage.provider=v8 --coverage.thresholds.lines=70 --coverage.thresholds.functions=70 --coverage.thresholds.statements=70 --coverage.thresholds.branches=60"
+  }
+}

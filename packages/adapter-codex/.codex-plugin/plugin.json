@@ -1,0 +1,24 @@
+{
+  "name": "adapter-codex",
+  "version": "0.1.0",
+  "description": "Portable transcript, long-term memory formation, recall, and MCP tools for Codex.",
+  "author": {
+    "name": "AgentEngram"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["memory", "context", "codex", "mcp"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "AgentEngram",
+    "shortDescription": "Cross-session memory and recall for Codex",
+    "longDescription": "Mirrors Codex rollout transcripts, forms durable typed memories, injects relevant recall, and exposes explicit memory tools over MCP.",
+    "developerName": "AgentEngram",
+    "category": "Productivity",
+    "capabilities": ["Memory", "Context", "MCP"],
+    "defaultPrompt": [
+      "Recall relevant AgentEngram context for this task.",
+      "Search my durable project memories.",
+      "Remember this project convention for future sessions."
+    ]
+  }
+}

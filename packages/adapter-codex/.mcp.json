@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "agentengram": {
+      "type": "stdio",
+      "command": "agentengram-codex-mcp",
+      "env_vars": ["AGENTENGRAM_HOME"]
+    }
+  }
+}

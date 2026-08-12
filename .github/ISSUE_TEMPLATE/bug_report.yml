@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible AgentEngram problem without sharing private memory data.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach transcripts, API keys, memory files, or an AgentEngram data bundle.
+  - type: input
+    id: version
+    attributes:
+      label: AgentEngram version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: adapter
+    attributes:
+      label: Integration
+      options: [Engine API, Pi, Codex, MCP, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Use synthetic data and include the exact command or code.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Redacted doctor output
+      description: Paste `agentengram doctor --json` output only after checking it contains no private paths you do not want to share.

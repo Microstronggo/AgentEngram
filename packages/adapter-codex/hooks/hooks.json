@@ -1,0 +1,61 @@
+{
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "startup|resume|clear|compact",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${PLUGIN_ROOT}/dist/cli.js",
+        "timeout": 30,
+        "statusMessage": "Loading AgentEngram"
+      }]
+    }],
+    "UserPromptSubmit": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node ${PLUGIN_ROOT}/dist/cli.js",
+        "timeout": 30,
+        "statusMessage": "Recalling AgentEngram"
+      }]
+    }],
+    "PreCompact": [{
+      "matcher": "manual|auto",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${PLUGIN_ROOT}/dist/cli.js",
+        "timeout": 60,
+        "statusMessage": "Saving AgentEngram before compact"
+      }]
+    }],
+    "PostCompact": [{
+      "matcher": "manual|auto",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${PLUGIN_ROOT}/dist/cli.js",
+        "timeout": 30
+      }]
+    }],
+    "SubagentStart": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${PLUGIN_ROOT}/dist/cli.js",
+        "timeout": 30
+      }]
+    }],
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node ${PLUGIN_ROOT}/dist/cli.js",
+        "timeout": 30,
+        "statusMessage": "Saving AgentEngram"
+      }]
+    }],
+    "SubagentStop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node ${PLUGIN_ROOT}/dist/cli.js",
+        "timeout": 60
+      }]
+    }]
+  }
+}

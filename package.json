@@ -1,0 +1,40 @@
+{
+  "name": "agentengram",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-neutral context and memory runtime for AI agents",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Microstronggo/AgentEngram.git"
+  },
+  "homepage": "https://github.com/Microstronggo/AgentEngram#readme",
+  "bugs": {
+    "url": "https://github.com/Microstronggo/AgentEngram/issues"
+  },
+  "type": "module",
+  "packageManager": "pnpm@10.26.2",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm --filter @agentengram/engine test:coverage && pnpm --filter @agentengram/adapter-pi test:coverage && pnpm --filter @agentengram/adapter-codex test:coverage && pnpm --filter @agentengram/mcp test:coverage",
+    "test:package": "node scripts/package-smoke.mjs",
+    "test:install": "node scripts/clean-install-smoke.mjs",
+    "check": "pnpm build && pnpm typecheck && pnpm test && pnpm test:package",
+    "check:release": "pnpm check && pnpm check:privacy && pnpm check:privacy:history && AGENTENGRAM_INSTALL_SMOKE=1 pnpm test:install",
+    "check:privacy": "node scripts/privacy-check.mjs",
+    "check:privacy:history": "node scripts/privacy-check.mjs --history"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "4.1.9",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
+  }
+}

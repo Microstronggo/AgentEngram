@@ -1,0 +1,12 @@
+{
+  "SessionStart": ["cwd", "hook_event_name", "model", "permission_mode", "session_id", "source", "transcript_path"],
+  "UserPromptSubmit": ["cwd", "hook_event_name", "model", "permission_mode", "prompt", "session_id", "transcript_path", "turn_id"],
+  "PreToolUse": ["cwd", "hook_event_name", "model", "permission_mode", "session_id", "tool_input", "tool_name", "tool_use_id", "transcript_path", "turn_id"],
+  "PermissionRequest": ["cwd", "hook_event_name", "model", "permission_mode", "session_id", "tool_input", "tool_name", "transcript_path", "turn_id"],
+  "PostToolUse": ["cwd", "hook_event_name", "model", "permission_mode", "session_id", "tool_input", "tool_name", "tool_response", "tool_use_id", "transcript_path", "turn_id"],
+  "PreCompact": ["cwd", "hook_event_name", "model", "session_id", "transcript_path", "trigger", "turn_id"],
+  "PostCompact": ["cwd", "hook_event_name", "model", "session_id", "transcript_path", "trigger", "turn_id"],
+  "SubagentStart": ["agent_id", "agent_type", "cwd", "hook_event_name", "model", "permission_mode", "session_id", "transcript_path", "turn_id"],
+  "SubagentStop": ["agent_id", "agent_transcript_path", "agent_type", "cwd", "hook_event_name", "last_assistant_message", "model", "permission_mode", "session_id", "stop_hook_active", "transcript_path", "turn_id"],
+  "Stop": ["cwd", "hook_event_name", "last_assistant_message", "model", "permission_mode", "session_id", "stop_hook_active", "transcript_path", "turn_id"]
+}
