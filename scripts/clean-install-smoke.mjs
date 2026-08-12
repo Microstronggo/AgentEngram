@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -11,11 +11,13 @@ const root = resolve(import.meta.dirname, "..");
 const temporary = mkdtempSync(join(tmpdir(), "agentengram-install-"));
 const packs = join(temporary, "packs");
 const application = join(temporary, "application");
+const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 try {
-  execFileSync("mkdir", ["-p", packs, application]);
+  mkdirSync(packs, { recursive: true });
+  mkdirSync(application, { recursive: true });
   for (const name of ["engine", "mcp", "adapter-pi", "adapter-codex"]) {
-    execFileSync("pnpm", ["--filter", `@agentengram/${name}`, "pack", "--pack-destination", packs], { cwd: root, stdio: "ignore" });
+    execFileSync(pnpm, ["--filter", `@agentengram/${name}`, "pack", "--pack-destination", packs], { cwd: root, stdio: "ignore" });
   }
   const archives = Object.fromEntries(readdirSync(packs).filter((file) => file.endsWith(".tgz")).map((file) => {
     const key = file.includes("adapter-codex") ? "codex" : file.includes("adapter-pi") ? "pi" : file.includes("engine") ? "engine" : "mcp";
@@ -40,7 +42,7 @@ try {
       },
     },
   }, null, 2)}\n`);
-  execFileSync("pnpm", ["install", "--config.auto-install-peers=false"], { cwd: application, stdio: "inherit" });
+  execFileSync(pnpm, ["install", "--config.auto-install-peers=false"], { cwd: application, stdio: "inherit" });
   execFileSync(process.execPath, ["-e", "await Promise.all([import('@agentengram/engine'), import('@agentengram/engine/public'), import('@agentengram/engine/adapter'), import('@agentengram/engine/testing'), import('@agentengram/mcp'), import('@agentengram/adapter-pi'), import('@agentengram/adapter-codex')])"], { cwd: application });
   const cli = join(application, "node_modules", ".bin", "agentengram");
   const data = join(application, "data");

@@ -6,10 +6,11 @@ import { basename, join, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const output = mkdtempSync(join(tmpdir(), "agentengram-pack-"));
 const packages = ["engine", "mcp", "adapter-pi", "adapter-codex"];
+const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 try {
   for (const name of packages) {
-    execFileSync("pnpm", ["--filter", `@agentengram/${name}`, "pack", "--pack-destination", output], {
+    execFileSync(pnpm, ["--filter", `@agentengram/${name}`, "pack", "--pack-destination", output], {
       cwd: root,
       stdio: "ignore",
     });
