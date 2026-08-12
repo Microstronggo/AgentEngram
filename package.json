@@ -27,10 +27,10 @@
     "check:privacy:history": "node scripts/privacy-check.mjs --history"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "@vitest/coverage-v8": "4.1.9",
-    "typescript": "^6.0.3",
-    "vitest": "^4.0.18"
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "4.1.10",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
