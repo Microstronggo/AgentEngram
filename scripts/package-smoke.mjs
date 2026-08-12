@@ -7,12 +7,16 @@ const root = resolve(import.meta.dirname, "..");
 const output = mkdtempSync(join(tmpdir(), "agentengram-pack-"));
 const packages = ["engine", "mcp", "adapter-pi", "adapter-codex"];
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+// Windows command shims are batch files, so Node must invoke them through the
+// command interpreter. POSIX keeps direct execution to avoid shell expansion.
+const pnpmOptions = process.platform === "win32" ? { shell: true } : {};
 
 try {
   for (const name of packages) {
     execFileSync(pnpm, ["--filter", `@agentengram/${name}`, "pack", "--pack-destination", output], {
       cwd: root,
       stdio: "ignore",
+      ...pnpmOptions,
     });
   }
   const archives = readdirSync(output).filter((file) => file.endsWith(".tgz"));
