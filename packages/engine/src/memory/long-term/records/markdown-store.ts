@@ -1,5 +1,6 @@
 import { mkdir, open, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { syncDirectory } from "../../../storage/durability.js";
 import { parseMemoryMarkdown, serializeMemoryMarkdown } from "./markdown-codec.js";
 import type { MemoryRecord } from "./memory-record.js";
 import { LEGACY_PARTITION_IDS, memoryPartitionKey, type MemoryPartition } from "./memory-partition.js";
@@ -169,12 +170,7 @@ async function writeAtomic(temporary: string, target: string, content: string): 
   }
   await file.close();
   await rename(temporary, target);
-  const directory = await open(dirname(target), "r");
-  try {
-    await directory.sync();
-  } finally {
-    await directory.close();
-  }
+  await syncDirectory(dirname(target));
 }
 
 function safeComponent(value: string): string {

@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, extname } from "node:path";
+import { extname } from "node:path";
 
 const root = new URL("..", import.meta.url);
 const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], {
@@ -9,7 +9,6 @@ const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclud
   encoding: "utf8",
 }).trim().split("\n").filter(Boolean);
 const home = homedir();
-const account = basename(home);
 const excludedPrefixes = [
   "packages/evaluation/datasets/",
   "packages/evaluation/reports/",
@@ -17,8 +16,8 @@ const excludedPrefixes = [
 const binaryExtensions = new Set([".db", ".png", ".jpg", ".jpeg", ".gif", ".zip", ".tgz", ".pdf"]);
 const checks = [
   { name: "local home path", pattern: home },
-  { name: "local account name", pattern: account },
   { name: "absolute macOS user path", regex: /\/Users\/[^/\s`"']+/g },
+  { name: "absolute Unix user path", regex: /\/home\/[^/\s`"']+/g },
   { name: "absolute Windows user path", regex: /[A-Za-z]:\\Users\\[^\\\s`"']+/g },
   { name: "private key", regex: /BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY/g },
   { name: "probable API token", regex: /\bsk-[A-Za-z0-9_-]{20,}\b/g },
@@ -68,7 +67,10 @@ function inspectHistory() {
   // Local backup branches may intentionally retain private development history
   // and must not make a clean public orphan branch fail this release gate.
   const revisions = execFileSync("git", ["rev-list", "HEAD"], { cwd: root, encoding: "utf8" }).trim().split("\n").filter(Boolean);
-  const historyPatterns = [...new Set([account, home, "/Users/"])];
+  // Match concrete home paths rather than the current account name. Generic CI
+  // accounts such as "runner" are valid identifiers in source code and must not
+  // make the result depend on which machine executes the release gate.
+  const historyPatterns = [...new Set([home, "/Users/", "/home/"])];
   for (const revision of revisions) {
     for (const pattern of historyPatterns) {
       try {

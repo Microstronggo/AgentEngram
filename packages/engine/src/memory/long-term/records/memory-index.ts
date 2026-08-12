@@ -1,5 +1,6 @@
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { syncDirectory } from "../../../storage/durability.js";
 import type { MemoryRecord } from "./memory-record.js";
 
 /** Human-readable index generated beside scoped Markdown memory records. */
@@ -50,8 +51,7 @@ export class MarkdownMemoryIndex {
       await handle.sync();
       await handle.close();
       await rename(temporary, target);
-      const directory = await open(dirname(target), "r");
-      try { await directory.sync(); } finally { await directory.close(); }
+      await syncDirectory(dirname(target));
     } catch (error) {
       await handle.close().catch(() => undefined);
       await rm(temporary, { force: true });

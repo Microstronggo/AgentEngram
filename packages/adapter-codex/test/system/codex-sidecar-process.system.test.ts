@@ -9,7 +9,7 @@ import { createCodexHookHandler } from "../../src/hook-runtime.js";
 const directories: string[] = [];
 
 afterEach(async () => {
-  await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
+  await Promise.all(directories.splice(0).map(removeDirectoryEventually));
 });
 
 describe("Codex detached worker process", () => {
@@ -54,8 +54,7 @@ describe("Codex detached worker process", () => {
         llmClient: new RejectingLLMClient(),
         failOpen: false,
       });
-      const startedAt = Date.now();
-      await handler({
+      const hookResult = handler({
         session_id: "session-process",
         turn_id: "turn-1",
         transcript_path: rollout,
@@ -66,11 +65,21 @@ describe("Codex detached worker process", () => {
         last_assistant_message: "I will request confirmation first.",
         stop_hook_active: false,
       });
-      expect(Date.now() - startedAt).toBeLessThan(1_000);
+      // Keep provider responses blocked until the Hook returns. This proves the
+      // producer does not wait for Formation without relying on runner speed.
+      await expect(Promise.race([
+        hookResult.then(() => "hook-returned"),
+        delay(5_000).then(() => "timeout"),
+      ])).resolves.toBe("hook-returned");
+      provider.releaseResponses();
+      await hookResult;
       await waitFor(() => provider.stages.length === 3, 10_000);
       expect(provider.stages).toEqual(["boundary", "episode", "derived"]);
     } finally {
       restoreEnvironment(savedEnvironment);
+      // Always unblock an in-flight worker before closing the server or removing
+      // its files, including when an assertion above fails.
+      provider.releaseResponses();
       await provider.close();
     }
 
@@ -88,7 +97,7 @@ describe("Codex detached worker process", () => {
       permission_mode: "default",
       prompt: "What should happen before committing code?",
     });
-    expect(recalled?.hookSpecificOutput?.additionalContext).toContain("Ask for confirmation before committing code");
+    expect(recalled?.hookSpecificOutput?.additionalContext).toMatch(/required confirmation before committing code/i);
   }, 15_000);
 });
 
@@ -98,15 +107,36 @@ class RejectingLLMClient implements LLMChatClient {
   }
 }
 
+/** Allows the detached worker a brief window to release files after its durable write. */
+async function removeDirectoryEventually(directory: string): Promise<void> {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      await rm(directory, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && ["EBUSY", "ENOTEMPTY", "EPERM"].includes(String(error.code)))) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25 * (attempt + 1)));
+    }
+  }
+  await rm(directory, { recursive: true, force: true });
+}
+
 async function startFakeProvider(): Promise<{
   readonly baseUrl: string;
   readonly stages: string[];
+  releaseResponses(): void;
   close(): Promise<void>;
 }> {
   const stages: string[] = [];
+  let releaseResponses = () => {};
+  const responsesReleased = new Promise<void>((resolve) => {
+    releaseResponses = resolve;
+  });
   const server = createServer(async (request, response) => {
     try {
-      await respondToFormation(request, response, stages);
+      await respondToFormation(request, response, stages, responsesReleased);
     } catch (error) {
       response.statusCode = 500;
       response.end(JSON.stringify({ error: { message: error instanceof Error ? error.message : String(error) } }));
@@ -118,6 +148,7 @@ async function startFakeProvider(): Promise<{
   return {
     baseUrl: `http://127.0.0.1:${address.port}`,
     stages,
+    releaseResponses,
     close: () => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())),
   };
 }
@@ -126,6 +157,7 @@ async function respondToFormation(
   request: IncomingMessage,
   response: ServerResponse,
   stages: string[],
+  responsesReleased: Promise<void>,
 ): Promise<void> {
   const chunks: Buffer[] = [];
   for await (const chunk of request) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -161,8 +193,13 @@ async function respondToFormation(
       confidence: 0.99,
     }] });
   }
+  await responsesReleased;
   response.setHeader("content-type", "application/json");
   response.end(JSON.stringify({ model: "fake-qwen", choices: [{ message: { content } }] }));
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 async function waitFor(predicate: () => boolean, timeoutMs: number): Promise<void> {

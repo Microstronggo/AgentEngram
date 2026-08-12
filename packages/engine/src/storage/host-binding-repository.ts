@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, readdir, rename, rm, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { createHostBinding, type HostBinding, type HostIdentity } from "../protocol/host-identity.js";
+import { syncDirectory } from "./durability.js";
 
 /** Exact host key required to find one portable namespace/thread binding. */
 export type HostBindingLookup = Pick<
@@ -69,8 +70,7 @@ export class FileHostBindingRepository implements HostBindingRepository {
       await handle.close();
       handle = undefined;
       await rename(temporary, target);
-      const directory = await open(this.rootDir, "r");
-      try { await directory.sync(); } finally { await directory.close(); }
+      await syncDirectory(this.rootDir);
     } finally {
       await handle?.close().catch(() => undefined);
       await rm(temporary, { force: true }).catch(() => undefined);

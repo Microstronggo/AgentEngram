@@ -6,12 +6,17 @@ import { basename, join, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const output = mkdtempSync(join(tmpdir(), "agentengram-pack-"));
 const packages = ["engine", "mcp", "adapter-pi", "adapter-codex"];
+const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+// Windows command shims are batch files, so Node must invoke them through the
+// command interpreter. POSIX keeps direct execution to avoid shell expansion.
+const pnpmOptions = process.platform === "win32" ? { shell: true } : {};
 
 try {
   for (const name of packages) {
-    execFileSync("pnpm", ["--filter", `@agentengram/${name}`, "pack", "--pack-destination", output], {
+    execFileSync(pnpm, ["--filter", `@agentengram/${name}`, "pack", "--pack-destination", output], {
       cwd: root,
       stdio: "ignore",
+      ...pnpmOptions,
     });
   }
   const archives = readdirSync(output).filter((file) => file.endsWith(".tgz"));
@@ -23,7 +28,12 @@ try {
 }
 
 function validateArchive(path) {
-  const listing = execFileSync("tar", ["-tzf", path], { encoding: "utf8" }).trim().split("\n");
+  // Normalize both Windows CRLF output and any platform-native separators before
+  // comparing archive paths, whose canonical package representation uses '/'.
+  const listing = execFileSync("tar", ["-tzf", path], { encoding: "utf8" })
+    .trim()
+    .split(/\r?\n/)
+    .map((entry) => entry.replaceAll("\\", "/"));
   const manifest = JSON.parse(execFileSync("tar", ["-xOzf", path, "package/package.json"], { encoding: "utf8" }));
   const required = [manifest.main, manifest.types, ...Object.values(manifest.bin ?? {})]
     .map((entry) => `package/${String(entry).replace(/^\.\//, "")}`);

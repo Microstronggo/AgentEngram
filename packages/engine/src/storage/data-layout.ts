@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, open, readFile, readdir, rename, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { syncDirectory } from "./durability.js";
 import { acquireFileLock } from "./file-lock.js";
 
 /** Current durable root layout understood by this Engine release. */
@@ -167,8 +168,7 @@ async function writeJsonAtomic(path: string, value: unknown): Promise<void> {
     await file.close();
     file = undefined;
     await rename(temporary, path);
-    const directory = await open(dirname(path), "r");
-    try { await directory.sync(); } finally { await directory.close(); }
+    await syncDirectory(dirname(path));
   } finally {
     await file?.close().catch(() => undefined);
     await rm(temporary, { force: true }).catch(() => undefined);
