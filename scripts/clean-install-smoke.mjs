@@ -55,14 +55,15 @@ try {
     ...pnpmOptions,
   });
   execFileSync(process.execPath, ["-e", "await Promise.all([import('@agentengram/engine'), import('@agentengram/engine/public'), import('@agentengram/engine/adapter'), import('@agentengram/engine/testing'), import('@agentengram/mcp'), import('@agentengram/adapter-pi'), import('@agentengram/adapter-codex')])"], { cwd: application });
-  const cli = join(application, "node_modules", ".bin", "agentengram");
+  const cli = join(application, "node_modules", ".bin", process.platform === "win32" ? "agentengram.cmd" : "agentengram");
+  const cliOptions = process.platform === "win32" ? { shell: true } : {};
   const data = join(application, "data");
-  execFileSync(cli, ["--version"], { stdio: "inherit" });
-  execFileSync(cli, ["migrate", "--home", data, "--cwd", application], { stdio: "inherit" });
-  execFileSync(cli, ["setup", "codex", "--home", data, "--cwd", application], { stdio: "inherit" });
-  execFileSync(cli, ["config", "print", "--effective", "--redacted", "--home", data, "--cwd", application], { stdio: "inherit" });
-  execFileSync(cli, ["doctor", "--adapter", "codex", "--home", data, "--cwd", application], { stdio: "inherit" });
-  execFileSync(cli, ["index", "rebuild", "--home", data, "--cwd", application], { stdio: "inherit" });
+  execFileSync(cli, ["--version"], { stdio: "inherit", ...cliOptions });
+  execFileSync(cli, ["migrate", "--home", data, "--cwd", application], { stdio: "inherit", ...cliOptions });
+  execFileSync(cli, ["setup", "codex", "--home", data, "--cwd", application], { stdio: "inherit", ...cliOptions });
+  execFileSync(cli, ["config", "print", "--effective", "--redacted", "--home", data, "--cwd", application], { stdio: "inherit", ...cliOptions });
+  execFileSync(cli, ["doctor", "--adapter", "codex", "--home", data, "--cwd", application], { stdio: "inherit", ...cliOptions });
+  execFileSync(cli, ["index", "rebuild", "--home", data, "--cwd", application], { stdio: "inherit", ...cliOptions });
   process.stdout.write("clean install smoke passed\n");
 } finally {
   rmSync(temporary, { recursive: true, force: true });
